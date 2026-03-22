@@ -3,24 +3,23 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useCategories } from '../hooks/useCategories'
 import CategoryManager from '../components/CategoryManager'
+import PaymentMethodManager from '../components/PaymentMethodManager'
 import Modal from '../components/Modal'
 
 export default function Settings() {
   const { user, profile }  = useAuth()
   const { categories }     = useCategories()
 
-  // Profile
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [nameSaved,   setNameSaved]   = useState(false)
   const [nameBusy,    setNameBusy]    = useState(false)
 
-  // Budget defaults
   const [defaults, setDefaults]   = useState({})
   const [defBusy,  setDefBusy]    = useState(false)
   const [defSaved, setDefSaved]   = useState(false)
 
-  // Category modal
-  const [showCatModal, setShowCatModal] = useState(false)
+  const [showCatModal, setShowCatModal]     = useState(false)
+  const [showPayModal, setShowPayModal]     = useState(false)
 
   useEffect(() => {
     if (profile?.display_name) setDisplayName(profile.display_name)
@@ -69,7 +68,7 @@ export default function Settings() {
     <div className="space-y-8 max-w-2xl">
       <div>
         <h1 className="text-2xl font-display font-bold text-white">Settings</h1>
-        <p className="text-muted text-sm mt-0.5">Manage your profile, categories, and default budgets</p>
+        <p className="text-muted text-sm mt-0.5">Manage your profile, categories, payment methods, and default budgets</p>
       </div>
 
       {/* Profile */}
@@ -78,8 +77,7 @@ export default function Settings() {
         <div className="space-y-4">
           <div>
             <label className="block text-xs text-muted mb-1.5 font-mono uppercase tracking-wider">Email</label>
-            <input value={user?.email || ''} disabled
-              className="opacity-50 cursor-not-allowed" />
+            <input value={user?.email || ''} disabled className="opacity-50 cursor-not-allowed" />
           </div>
           <div>
             <label className="block text-xs text-muted mb-1.5 font-mono uppercase tracking-wider">Display Name</label>
@@ -121,6 +119,23 @@ export default function Settings() {
         </div>
       </section>
 
+      {/* Payment Methods */}
+      <section className="rounded-2xl border border-border p-6" style={{ background:'#161B22' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-display font-semibold text-white">Payment Methods</h2>
+            <p className="text-muted text-xs mt-0.5">Your cards, wallets, and payment options</p>
+          </div>
+          <button onClick={() => setShowPayModal(true)}
+            className="px-4 py-2 rounded-xl text-sm font-medium border border-border text-muted hover:text-white hover:border-accent transition-all">
+            Manage →
+          </button>
+        </div>
+        <p className="text-xs text-muted">
+          Add your specific cards and payment apps — e.g. "Rakuten Card", "SMBC Visa", "LINE Pay". These will appear in the dropdown when logging expenses.
+        </p>
+      </section>
+
       {/* Default budgets */}
       <section className="rounded-2xl border border-border p-6" style={{ background:'#161B22' }}>
         <div className="flex items-center justify-between mb-1">
@@ -134,7 +149,7 @@ export default function Settings() {
           </button>
         </div>
         <p className="text-xs text-muted mb-5">
-          These are used to pre-fill the Budget Grid when you start a new year.
+          Used to pre-fill the Budget Grid when you start a new year.
         </p>
         <div className="space-y-2">
           {categories.map(cat => (
@@ -160,7 +175,7 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* Account danger zone */}
+      {/* Account */}
       <section className="rounded-2xl border border-red-500/20 p-6" style={{ background:'rgba(248,81,73,0.03)' }}>
         <h2 className="font-display font-semibold text-red-400 mb-2">Account</h2>
         <p className="text-xs text-muted mb-4">
@@ -172,10 +187,15 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* Category manager modal */}
       {showCatModal && (
         <Modal title="Manage Categories" onClose={() => setShowCatModal(false)}>
           <CategoryManager />
+        </Modal>
+      )}
+
+      {showPayModal && (
+        <Modal title="Manage Payment Methods" onClose={() => setShowPayModal(false)}>
+          <PaymentMethodManager />
         </Modal>
       )}
     </div>
