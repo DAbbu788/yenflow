@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useCategories } from '../hooks/useCategories'
+import { usePaymentMethods } from '../hooks/usePaymentMethods'
 import Modal from '../components/Modal'
 import { format } from 'date-fns'
 
-const PAYMENT_METHODS = ['Cash','Credit Card','Debit Card','Bank Transfer','IC Card / Suica','PayPay / Mobile Pay','Other']
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 function fmt(n) { return `¥${Number(n).toLocaleString()}` }
@@ -15,17 +15,17 @@ const EMPTY = { date: format(new Date(),'yyyy-MM-dd'), description:'', category_
 export default function Expenses() {
   const { user }                  = useAuth()
   const { categories }            = useCategories()
+  const { methods }               = usePaymentMethods()
   const [rows,    setRows]         = useState([])
   const [loading, setLoading]      = useState(true)
-  const [modal,   setModal]        = useState(null)   // null | 'add' | 'edit'
+  const [modal,   setModal]        = useState(null)
   const [form,    setForm]         = useState(EMPTY)
-  const [editing, setEditing]      = useState(null)   // row id
+  const [editing, setEditing]      = useState(null)
   const [error,   setError]        = useState('')
   const [busy,    setBusy]         = useState(false)
 
-  // Filters
   const [filterYear,  setFilterYear]  = useState(new Date().getFullYear())
-  const [filterMonth, setFilterMonth] = useState(0)   // 0 = all
+  const [filterMonth, setFilterMonth] = useState(0)
   const [filterCat,   setFilterCat]   = useState('')
   const [search,      setSearch]      = useState('')
 
@@ -62,7 +62,7 @@ export default function Expenses() {
 
   const total = filtered.reduce((s,r) => s + Number(r.amount), 0)
 
-  function openAdd() { setForm({ ...EMPTY, date: format(new Date(),'yyyy-MM-dd') }); setEditing(null); setError(''); setModal('form') }
+  function openAdd()     { setForm({ ...EMPTY, date: format(new Date(),'yyyy-MM-dd') }); setEditing(null); setError(''); setModal('form') }
   function openEdit(row) { setForm({ date: row.date, description: row.description||'', category_name: row.category_name, amount: row.amount, payment_method: row.payment_method||'', notes: row.notes||'' }); setEditing(row.id); setError(''); setModal('form') }
 
   async function handleSave() {
@@ -93,7 +93,6 @@ export default function Expenses() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-white">Expenses</h1>
@@ -108,7 +107,6 @@ export default function Expenses() {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))} className="text-sm">
           {[2024,2025,2026,2027,2028,2029,2030].map(y => <option key={y} value={y}>{y}</option>)}
@@ -124,7 +122,6 @@ export default function Expenses() {
         <input placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)} className="text-sm" />
       </div>
 
-      {/* Table */}
       <div className="rounded-2xl border border-border overflow-hidden" style={{ background:'#161B22' }}>
         {loading ? (
           <div className="text-center py-16 text-muted text-sm">Loading…</div>
@@ -182,7 +179,6 @@ export default function Expenses() {
         )}
       </div>
 
-      {/* Form modal */}
       {modal === 'form' && (
         <Modal title={editing ? 'Edit Expense' : 'Add Expense'} onClose={() => setModal(null)}>
           <div className="space-y-4">
@@ -213,7 +209,7 @@ export default function Expenses() {
                 <label className="block text-xs text-muted mb-1.5 font-mono uppercase tracking-wider">Payment</label>
                 <select value={form.payment_method} onChange={e => f('payment_method',e.target.value)}>
                   <option value="">Select…</option>
-                  {PAYMENT_METHODS.map(p => <option key={p} value={p}>{p}</option>)}
+                  {methods.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
                 </select>
               </div>
             </div>
